@@ -1,3 +1,6 @@
+"""
+adaptation for ai player
+"""
 from card import Card
 from console import print_
 from translation import getText

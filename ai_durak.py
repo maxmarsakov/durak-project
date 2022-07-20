@@ -1,29 +1,41 @@
-#!/usr/bin/pythonw
-# -*- coding: utf-8 -*-
-
+"""
+Modified Durak class for our purposes
+"""
 from baseGame import BaseGame
-from deck import DeckType
+from deck import DeckType,Deck
 from player import Player
 from move import Move
 from os import system, name
 from console import print_
-from translation import getText, checkLanguageAvailable, setLanguage, getAvailableLanguages
+from translation import getText
 import random
-
-# define our clear function 
-def clear(): 
-    if name == 'nt': 
-        _ = system('cls') 
-    else: 
-        _ = system('clear') 
-
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
 
 class Durak(BaseGame):
     def __init__(self, players, deckType, cardsInHand):
-        super(Durak, self).__init__(players, deckType, cardsInHand)
+        """
+        cardsInHand - how much cards in hand
+        TODO: players are agents now
+        """
+        if(type(deckType) != DeckType): raise Exception(getText('CANT_DEFINE_DECK'))
+        self._players = players
+        self._deck = Deck(deckType)
+        self._cardsInHand = cardsInHand
         self.trumpCard = None
+
+    """
+    from baseGame
+    """
+    def fillDeck(self):
+        self._deck.fillDeck()
+
+    def shuffleDeck(self):
+        self._deck.shuffleDeck()
+
+    def handOverCards(self):
+        s = ''
+        for player in self._players:
+            s += player.handOverCards(self._deck, self._cardsInHand)
+        print_(s.rstrip(), endWith='\n', startWith='\n')
 
     def defineTrump(self):
         cardNumber = random.randint(0, len(self._deck.cards) - 1)
@@ -94,45 +106,3 @@ class Durak(BaseGame):
             return (True, command)
         else: 
             return (False, None)
-
-def startGame():
-    # Select game language
-    language_exist = False
-    while (not language_exist):
-        language = input(getText('SELECT_LANGUAGE').format(getAvailableLanguages()))
-        if(checkLanguageAvailable(language)):
-            setLanguage(language)
-            language_exist = True
-        else:
-            print_ (getText('WRONG_LANGUAGE'))
-
-    clear()
-
-    name = input(getText('PLAYER_NAME'))
-    # TODO for tests set 1 card
-    durak = Durak([Player(name), Player('bot', True)], DeckType.Card36, 6)
-    durak.fillDeck()
-    durak.shuffleDeck()
-    durak.defineTrump()
-    durak.handOverCards()
-    move = None
-    loser = (None, None)
-    while (not loser[0]):
-        players = durak.nextPlayers(move)
-        playerMove = players[0]
-        playerDefense = players[1]
-        move = Move(durak.trumpCard, playerMove, playerDefense)
-
-        while(move.isOver == False and not loser[0]):
-            playerMove.setCurrentMove(move)
-            playerDefense.setCurrentMove(move)
-            loser = durak.checkLoserExist()
-
-        if(loser[0]):
-            if(loser[1]!=getText('EXIT')): startGame()
-            return
-        
-        durak.handOverCards()
-
-# Enter point
-startGame()
