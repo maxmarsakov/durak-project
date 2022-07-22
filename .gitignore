@@ -148,6 +148,8 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
+trash/
+settings.json
 # Environments
 .env
 .venv
@@ -158,6 +160,7 @@ env.bak/
 venv.bak/
 
 ml_durak/
+ml-durak-out/
 ai-ex2/
 
 # Spyder project settings
