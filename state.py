@@ -49,6 +49,7 @@ class State:
         for card in cards:
             card_dict[card.value] += 1
         return card_dict
+
     def get_possible_actions(self):
         actions = list()
         if self.has_opponent_pass:
@@ -62,6 +63,7 @@ class State:
         if not self.is_defense and len(self.move.cards) != 0:
             actions.append(Action(bita=True))
         return actions
+        
     def get_next_state(self, action):
         # move should have been changed deck shouldn't
         if not (action.bita or action.take):
