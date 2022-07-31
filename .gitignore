@@ -33,6 +33,9 @@ projectParams.py
 docs/
 layouts/
 out.txt
+ai-ex4
+rlcard_lib/
+weights/
 
 # Distribution / packaging
 .Python

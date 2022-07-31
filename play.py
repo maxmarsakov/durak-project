@@ -5,23 +5,31 @@ import numpy as np
 import durak2 as dk
 import agent as agt
 import util
-from console import print_, format_suit_card
+from console import print_, format_suit_card, print_round_info
+
+from collections import namedtuple
+Reward = namedtuple('Reward', 'win_game loose_game win_round loose_round default')
+default_reward = Reward(1,0,0,0,0)
 
 gargs = None
 
 def parseArgs():
     parser = argparse.ArgumentParser(
         description='Play a two-player game of Durak against a random-policy opponent.')
-    parser.add_argument('-a', '--agent', type=str, default='simple',
-                        choices=['human', 'random', 'simple', 'reflex', 'simple++'], help="Agent type")
+    parser.add_argument('-a', '--agent', type=str, default='human',
+                        choices=['human', 'random', 'simple', 'reflex', 'minimax','qagent'], help="Agent type")
     parser.add_argument('-o', '--opponent', type=str, default='simple',
-                        choices=['human', 'random', 'simple', 'reflex', 'simple++'], help="Opponent type")
+                        choices=['human', 'random', 'simple', 'reflex', 'minimax','qagent'], help="Opponent type")
     parser.add_argument('-v', '--verbose', action='store_true', help='verbosity')
     parser.add_argument('-n', '--numGames', type=int, default=100,
                         help="Number of games to play")
     parser.add_argument('-t', '--train', action='store_true', help='Train the AI')
+    parser.add_argument('-m', '--method', type=str, choices=['TD', 'Q'], default='TD', help='Choose the training method: TD or Qlearning')
     return parser.parse_args()
 
+# hyper parameters for learning
+DISCOUNT=1
+ETA=1e-1
 
 def getAgent(agentType, playerNum):
     if agentType == 'human':
@@ -32,13 +40,38 @@ def getAgent(agentType, playerNum):
         return agt.SimpleAgent()
     elif agentType == 'reflex':
         return agt.ReflexAgent(playerNum)
-    elif agentType == 'simple++':
-        return agt.SimpleEnhancedAgent(playerNum)
+    elif agentType == 'minimax':
+        return agt.MinimaxAgent(playerNum)
+    elif agentType == 'qagent':
+        return agt.ApproximateQAgent(playerNum)
+
+"""
+different methods for training our agents
+TDupdate - temporal difference
+Qupdate - Qlearning
+"""
+def getQValue(state,action,w):
+    # TODO add action
+    features = util.extractFeatures(state)
+    return np.dot(w,features)
+
+def QUpdate(state, nextState, reward, w, eta=ETA, discount=DISCOUNT, action=None, possible_actions=None):
+    val=0.0
+    if nextState is not None:
+        #val = max([getQValue(nextState,act,w) for act in possible_actions])
+        val = getQValue(nextState,None,w)
+    q_val = getQValue(state,action,w)
+    update =  discount * val + reward - q_val
+    features = util.extractFeatures(state)
+    weights_del = features * update * eta
+    #print(val)
+    return w + weights_del
 
 
-def TDUpdate(state, nextState, reward, w, eta=1e-1):
+def TDUpdate(state, nextState, reward, w, eta=ETA, discount=DISCOUNT, action=None, possible_actions=None):
     features = util.extractFeatures(state)
     value = util.logisticValue(w, features)
+    #print("value", value)
     residual = reward - value
     if nextState is not None:
         nextFeatures = util.extractFeatures(nextState)
@@ -48,7 +81,11 @@ def TDUpdate(state, nextState, reward, w, eta=1e-1):
     return newWeights
 
 
-def train(args):
+def train(args, update_func=TDUpdate, reward:Reward=default_reward):
+    """
+    method is the function to update : tdupdate or qupdate, 
+    """
+    print("Training process start: ", update_func.__name__, "rewards", reward)
     w_atk = np.random.normal(0, 1e-2, (util.NUM_FEATURES,))
     w_def = np.random.normal(0, 1e-2, (util.NUM_FEATURES,))
     w_atk[-1] = 0
@@ -66,34 +103,38 @@ def train(args):
         while True:
             preAttack = None
             preDefend = None
+            defend_action=None
+            attack_action=None
             while True:
                 preAttack = g.getState(attacker)
-                attack(g, attacker, agents[attacker])
+                attack_action = attack(g, attacker, agents[attacker])
                 postAttack = g.getState(defender)
                 if g.roundOver():
+                    # TODO: add rewards for successful round
                     break
                 elif preDefend is not None:
-                    w_def = TDUpdate(preDefend, postAttack, 0, w_def)
+                    w_def = update_func(preDefend, postAttack, reward.default, w_def, action=defend_action)
                     for agent in agents:
                         agent.setDefendWeights(w_def)
 
                 preDefend = postAttack
-                defend(g, defender, agents[defender])
+                defend_action = defend(g, defender, agents[defender])
                 postDefend = g.getState(attacker)
                 if g.roundOver():
+                    # TODO: add rewards for successful round
                     break
                 else:
-                    w_atk = TDUpdate(preAttack, postDefend, 0, w_atk)
+                    w_atk = update_func(preAttack, postDefend, reward.default, w_atk, action=attack_action)
                     for agent in agents:
                         agent.setAttackWeights(w_atk)
 
             if g.gameOver():
                 if g.isWinner(attacker):
-                    w_atk = TDUpdate(g.getState(attacker), None, 1, w_atk)
-                    w_def = TDUpdate(g.getState(defender), None, 0, w_def)
+                    w_atk = update_func(g.getState(attacker), None, reward.win_game, w_atk, action=attack_action)
+                    w_def = update_func(g.getState(defender), None, reward.loose_game, w_def, action=defend_action)
                 else:
-                    w_def = TDUpdate(g.getState(defender), None, 1, w_def)
-                    w_atk = TDUpdate(g.getState(attacker), None, 0, w_atk)
+                    w_def = update_func(g.getState(defender), None, reward.win_game, w_def, action=defend_action)
+                    w_atk = update_func(g.getState(attacker), None, reward.loose_game, w_atk, action=attack_action)
                 for agent in agents:
                     agent.setAttackWeights(w_atk)
                     agent.setDefendWeights(w_def)
@@ -103,15 +144,15 @@ def train(args):
 
             # Edge case, the defender from the last round won
             if g.gameOver():
-                w_def = TDUpdate(g.getState(defender), None, 1, w_def)
-                w_atk = TDUpdate(g.getState(attacker), None, 0, w_atk)
+                w_def = update_func(g.getState(defender), None, reward.win_game, w_def, action=defend_action)
+                w_atk = update_func(g.getState(attacker), None, reward.loose_game, w_atk, action=attack_action)
                 for agent in agents:
                     agent.setDefendWeights(w_def)
                     agent.setAttackWeights(w_atk)
                 break
             else:
-                w_def = TDUpdate(preDefend, g.getState(defender), 0, w_def)
-                w_atk = TDUpdate(preAttack, g.getState(attacker), 0, w_atk)
+                w_def = update_func(preDefend, g.getState(defender), reward.default, w_def, action=defend_action)
+                w_atk = update_func(preAttack, g.getState(attacker), reward.default, w_atk, action=attack_action)
                 for agent in agents:
                     agent.setDefendWeights(w_def)
                     agent.setAttackWeights(w_atk)
@@ -121,32 +162,38 @@ def train(args):
 
         if i % 50 == 0:
             print('Training iteration: %d / %d' % (i, args.numGames))
-            randomAgent = agt.RandomAgent()
-            simpleAgent = agt.SimpleAgent()
-            winCounts = {'random': 0, 'simple': 0}
-            for _ in range(500):
-                winVsRandom = play(dk.Durak(), [randomAgent, agents[0]])
-                winVsSimple = play(dk.Durak(), [simpleAgent, agents[0]])
-                winCounts['random'] += winVsRandom
-                winCounts['simple'] += winVsSimple
-            with open('results.csv', 'a') as f:
-                row = [i, winCounts['random'], winCounts['simple']]
-                row.extend(w_atk)
-                row.extend(w_def)
-                np.savetxt(f, np.array(row)[:, None].T, delimiter=',', fmt='%.4e')
 
-            # save weights
-            with open('%s_attack_%d.bin' % (args.agent, i), 'w') as f_atk:
+            # save weights partially
+            with open('%s_attack_%d.bin' % (args.agent, i), 'wb') as f_atk:
                 pickle.dump(w_atk, f_atk)
-            with open('%s_defend_%d.bin' % (args.agent, i), 'w') as f_def:
+            with open('%s_defend_%d.bin' % (args.agent, i), 'wb') as f_def:
                 pickle.dump(w_def, f_def)
 
         g.newGame()
 
-    with open('%s_attack.bin' % args.agent, 'w') as f_atk:
+    with open('%s_attack.bin' % args.agent, 'wb') as f_atk:
         pickle.dump(w_atk, f_atk)
-    with open('%s_defend.bin' % args.agent, 'w') as f_def:
+    with open('%s_defend.bin' % args.agent, 'wb') as f_def:
         pickle.dump(w_def, f_def)
+
+    # Evaluation stage
+    randomAgent = agt.RandomAgent()
+    simpleAgent = agt.SimpleAgent()
+    winCounts = {'random': 0, 'simple': 0}
+    numGamesSim = 100
+    for j in range(numGamesSim):
+        winVsRandom = play(dk.Durak(), [randomAgent, agents[0]])
+        winVsSimple = play(dk.Durak(), [simpleAgent, agents[0]])
+        winCounts['random'] += winVsRandom
+        winCounts['simple'] += winVsSimple
+
+    print("win counts vs random", winCounts['random']/numGamesSim)
+    print("win counts vs simple", winCounts['simple']/numGamesSim)
+    with open('results.csv', 'a') as f:
+        row = [i, winCounts['random'], winCounts['simple']]
+        row.extend(w_atk)
+        row.extend(w_def)
+        np.savetxt(f, np.array(row)[:, None].T, delimiter=',', fmt='%.4e')
 
     return w_atk, w_def
 
@@ -157,27 +204,16 @@ def attack(g, playerNum, agent):
     if gargs.verbose:
         print("attack card is", card)
     g.playCard(playerNum, card)
+    return card
 
 
 def defend(g, playerNum, agent):
     actions = g.getDefendOptions(playerNum)
     card = agent.getDefendCard(actions, g)
     g.playCard(playerNum, card)
+    return card
 
 
-def __format_table( table):
-    table_cards = list(reversed(table.cards))
-    n = len(table_cards)
-    formatted_table = ""
-    for i in range(0,n,2):
-        formatted_table += repr(table_cards[i])
-        if (i < n-1): 
-            formatted_table += " -> " + repr(table_cards[i+1])
-        formatted_table += "\n"
-    return formatted_table
-
-def print_round_info(game):
-    print_('The table: \n ', __format_table(game.table) )
     
 def play(g, agents):
     attacker = g.getFirstAttacker()
@@ -225,7 +261,6 @@ def play(g, agents):
 
 def main(args):
     global gargs
-    gargs = args
     winCounts = [0, 0]
     agents = [None, None]
     agents[0] = getAgent(args.agent, 0)
@@ -244,10 +279,19 @@ def main(args):
     print('Agent: %d/%d' % (winCounts[0], args.numGames))
     print('Opponent: %d/%d' % (winCounts[1], args.numGames))
 
+def get_reward(method='TD'):
+    if method=='Q':
+        return Reward(100,0,1,0,0)
+    elif method=='TD':
+        return default_reward
 
 if __name__ == '__main__':
     args = parseArgs()
-    if args.train and args.agent in ['reflex']:
-        train(args)
+    gargs = args
+
+    if args.train and args.agent in ['reflex','minimax','qagent']:
+        method = QUpdate if args.method == 'Q' else TDUpdate
+        reward = get_reward(args.method)
+        train(args, method, reward)
     else:
         main(args)

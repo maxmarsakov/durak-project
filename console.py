@@ -30,3 +30,19 @@ def format_suit_card(suitString, text=""):
         color = '\033[30m'
     return f'\033[47m {color}{formattedSuit}\033[00m\033[47m\033[30m {text} \033[00m' 
 
+def __format_table( table):
+    # helper function to represent the table graphically
+    table_cards = list(reversed(table.cards))
+    n = len(table_cards)
+    formatted_table = ""
+    for i in range(0,n,2):
+        formatted_table += repr(table_cards[i])
+        if (i < n-1): 
+            formatted_table += " -> " + repr(table_cards[i+1])
+        formatted_table += "\n"
+    return formatted_table
+
+def print_round_info(game):
+    # helper function to represent the table graphically
+    print_('The table: \n ', __format_table(game.table) )
+
