@@ -5,8 +5,6 @@ import functools
 from heapq import merge
 import numpy as np
 
-#from .utils import cards2str, doudizhu_sort_card, CARD_RANK_STR
-
 import durak2 as dk
 
 
@@ -65,6 +63,9 @@ class Game:
             else:
                 # new round, refil hands and set current player
                 self.g.endRound() 
+                # edge case
+                if self.g.gameOver():
+                    self.winner_id = self.g.winner
 
         next_id = self.g.getCurrentPlayer()
         # get next state
@@ -93,6 +94,7 @@ class Game:
                 actions = self.g.getDefendOptions(self.g.current_player)
         #state = player.get_state(self.round.public, others_hands, num_cards_left, actions)
         state['actions']=actions
+        state['current_player']=self.g.current_player
         return state
 
     @staticmethod

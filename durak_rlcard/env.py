@@ -29,7 +29,7 @@ class DurakEnv(Env):
         self.game = Game()
         super().__init__(config)
         # TODO recalc state shape
-        self.state_shape = [[790], [901], [901]]
+        self.state_shape = [[151], [901], [901]]
 
         # add special action
         self.action_shape = [[TOTAL_CARDS+1] for _ in range(self.num_players)]
@@ -41,11 +41,17 @@ class DurakEnv(Env):
         '''
         legal_actions = self.game.state['actions']
         
-        #legal_actions = {self._ACTION_2_ID[action]: _cards2array(action) for action in legal_actions}
-        # TODO - compute action id based on indexing
-        legal_actions = [action_id for _compute_action_id(action) in legal_actions]
+        legal_actions = dict([ (self._compute_action_id(action),action) for action in legal_actions])
         #print(legal_actions)
         return legal_actions
+    
+    def _compute_action_id(self, action):
+        if action.suit==-1:
+            return 36
+        action_id = action.suit*9+action.rank-6
+        #print(action, action_id)
+        return action_id
+    
 
     def _extract_state(self, state):
         ''' Encode state
@@ -84,11 +90,12 @@ class DurakEnv(Env):
         Returns:
             payoffs (list): a list of payoffs for each player
         '''
-        if not self.game.winner_id:
+        if self.game.winner_id is None:
+            # should not happen
             return (0,0)
         payoffs = [0,0]
         payoffs[self.game.winner_id]=1
-        return payoffs
+        return tuple(payoffs)
         
 
     def _decode_action(self, action_id):
@@ -98,8 +105,12 @@ class DurakEnv(Env):
         Returns:
             action (string): the action that will be passed to the game engine.
         '''
-        a = action_id.split("-")
-        return Card(a[0],a[1])
+        if (action_id==36):
+            return Card(-1,-1)
+        suit=action_id//9
+        rank=action_id%9+6
+        card = Card(suit,rank)
+        return card
 
 
     def get_perfect_information(self):
@@ -134,21 +145,23 @@ NumOnes2Array = {0: np.array([0, 0, 0, 0]),
 
 def _one_hot(card):
     # gets one card, returns one hot
-    base = np.zeros((4,10), dtype=np.int8)
+    base = np.zeros((4,9), dtype=np.int8)
+    has_special=[0]
     if card.suit == -1: # special card:
-        base[0][9] = 1
-        return base.flatten('F')
+        has_special=[1]
+        return np.concatenate([base.flatten('F'),has_special])
     base[card.suit][card.rank-6] = 1
-    return base.flatten('F')
+    return np.concatenate([base.flatten('F'),has_special])
 
 def _cards2array(cards):
-    base = np.zeros((4,10), dtype=np.int8)
+    base = np.zeros((4,9), dtype=np.int8)
+    has_special=[0]
     for card in cards:
         if (card.suit == -1):
-            base[0][6] = 1
+            has_special=[1]
         else:
             base[card.suit][card.rank-6] = 1
-    return base.flatten('F')
+    return np.concatenate([base.flatten('F'),has_special])
 
 """
 def _get_one_hot_array(num_left_cards, max_num_cards):

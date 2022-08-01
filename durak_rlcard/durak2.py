@@ -254,7 +254,7 @@ class Durak:
             raise Exception('Tried to play a card for a finished round')
 
         opponent = int(not player)
-        if card == Durak.END_ROUND:
+        if card == Durak.END_ROUND: # bita/take
             self.roundWinner = opponent
             # set current player to opponent
             self.current_player = opponent
@@ -264,6 +264,8 @@ class Durak:
         self.knownHand[player].removeCard(card)
         self.unseenCards[opponent].removeCard(card)
         self.table.addCard(card)
+        # set current player to opponent
+        self.current_player = opponent
 
         if len(self.hand[player]) == 0:
             self.roundWinner = player
