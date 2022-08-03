@@ -16,7 +16,7 @@ gargs = None
 def parseArgs():
     parser = argparse.ArgumentParser(
         description='Play a two-player game of Durak against a random-policy opponent.')
-    parser.add_argument('-a', '--agent', type=str, default='human',
+    parser.add_argument('-a', '--agent', type=str, default='random',
                         choices=['human', 'random', 'simple', 'reflex', 'minimax','qagent'], help="Agent type")
     parser.add_argument('-o', '--opponent', type=str, default='simple',
                         choices=['human', 'random', 'simple', 'reflex', 'minimax','qagent'], help="Opponent type")

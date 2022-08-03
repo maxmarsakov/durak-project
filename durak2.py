@@ -3,7 +3,6 @@ import random
 import console
 
 
-
 class Card:
     SUITS = {0: 'C', 1: 'H', 2: 'D', 3: 'S'}
     ROYALS = {11: 'J', 12: 'Q', 13: 'K', 14: 'A'}
@@ -32,12 +31,15 @@ class Card:
     def __hash__(self):
         return hash((self.rank, self.suit))
 
+    def id(self):
+        # needed for ENV
+        return str(self.suit)+"-"+str(self.rank)
+
     def __repr__(self):
         rankString = Card.ROYALS.get(self.rank, str(self.rank))
         suitString = Card.SUITS.get(self.suit, str(self.suit))
 
         return console.format_suit_card(suitString, rankString)
-        #return '<Card %s %s>' % (rankString, suitString)
 
     def __str__(self):
         return repr(self)
@@ -65,6 +67,12 @@ class CardSet(object):
         self.groupedByRank = {rank: set() for rank in Card.RANKS}
         self.groupedBySuit = {suit: set() for suit in Card.SUITS}
         self.size = 0
+
+    # @max - iterable object
+    def __iter__(self):
+        for rank in Card.RANKS:
+            for card in self.groupedByRank[rank]:
+                yield card
 
     def __len__(self):
         return self.size
@@ -168,6 +176,8 @@ class Durak:
         self.roundWinner = None
         self.winner = None
 
+        self.current_player=0
+
         ## card counting tools
         self.knownHand = [CardSet(), CardSet()]
         self.unseenCards = [CardSet(), CardSet()]
@@ -201,6 +211,9 @@ class Durak:
         else:
             self.attacker = 0
 
+        # set current player
+        self.current_player = self.attacker
+
         return self.attacker
 
     def getAttackOptions(self, player):
@@ -231,6 +244,9 @@ class Durak:
         cards.append(Durak.END_ROUND)
         return cards
 
+    def getCurrentPlayer(self):
+        return self.current_player
+
     def playCard(self, player, card):
         if self.winner is not None:
             raise Exception('Tried to play a card for a finished game')
@@ -238,14 +254,18 @@ class Durak:
             raise Exception('Tried to play a card for a finished round')
 
         opponent = int(not player)
-        if card == Durak.END_ROUND:
+        if card == Durak.END_ROUND: # bita/take
             self.roundWinner = opponent
+            # set current player to opponent
+            self.current_player = opponent
             return
 
         self.hand[player].removeCard(card)
         self.knownHand[player].removeCard(card)
         self.unseenCards[opponent].removeCard(card)
         self.table.addCard(card)
+        # set current player to opponent
+        self.current_player = opponent
 
         if len(self.hand[player]) == 0:
             self.roundWinner = player
@@ -278,7 +298,12 @@ class Durak:
         self.table.clearTable()
         self.refillHands()
         if self.attacker != self.roundWinner:
+            # now current player is defender
+            self.current_player = defender
+
             self.attacker = defender
+        else:
+            self.current_player = self.attacker
         self.roundWinner = None  # reset the round winner
 
         # Edge case: last round, the defender ran out of cards & the attacker got under
