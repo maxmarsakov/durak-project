@@ -19,8 +19,6 @@ share/
 *.h
 *.hpp
 
-playground/
-durak_rlcard/
 
 # non of these
 autograder.py
