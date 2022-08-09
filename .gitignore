@@ -8,7 +8,6 @@ lib64/
 # C extensions
 *.so
 
-*.png
 *.css
 
 Scripts/
@@ -19,8 +18,6 @@ share/
 *.h
 *.hpp
 
-playground/
-durak_rlcard/
 
 # non of these
 autograder.py
