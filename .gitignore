@@ -8,7 +8,6 @@ lib64/
 # C extensions
 *.so
 
-*.png
 *.css
 
 Scripts/

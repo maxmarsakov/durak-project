@@ -92,18 +92,3 @@ def _print_state(state, raw_legal_actions, action_record):
     print(__format_table(state['table']))
     print("your hand", state['hand'])
     print("legal actions", raw_legal_actions)
-
-    """
-    print('\n=============   Dealer Hand   ===============')
-    print_card(state['dealer hand'])
-
-    num_players = 2
-
-    for i in range(num_players):
-        print('===============   Player {} Hand   ==============='.format(i))
-        print_card(state['player' + str(i) + ' hand'])
-
-    print('\n=========== Actions You Can Choose ===========')
-    print(', '.join([str(index) + ': ' + action for index, action in enumerate(raw_legal_actions)]))
-    print('')
-    """
