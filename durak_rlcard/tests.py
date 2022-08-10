@@ -54,7 +54,7 @@ def basic_blackjack():
     print(payoffs)
 
 if __name__ == "__main__":
-    #basic_random_test()
+    basic_random_test()
     #basic_human_test()
-    basic_blackjack()
+    #basic_blackjack()
 

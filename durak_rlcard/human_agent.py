@@ -1,5 +1,5 @@
 from rlcard.utils.utils import print_card
-from durak2 import Card
+from base.durak2 import Card
 
 class HumanAgent(object):
     ''' A human agent for Blackjack. It can be used to play alone for understand how the blackjack code runs

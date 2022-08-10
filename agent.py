@@ -2,9 +2,9 @@ import random
 import copy
 import pickle
 import numpy as np
-import durak2 as dk
-import util
-from console import print_, format_suit_card
+import base.durak2 as dk
+import base.util as util
+from base.console import print_, format_suit_card
 
 class Agent(object):
     def getAttackCard(self, cards, game):
@@ -17,7 +17,6 @@ class Agent(object):
 class HumanAgent(Agent):
     def __init__(self, playerNum):
         self.playerNum = playerNum
-
 
     def printInfo(self, game):
         opponent = int(not self.playerNum)
@@ -83,8 +82,6 @@ class SimpleAgent(Agent):
 
 
 ### LEARNING AGENTS
-
-
 class ReflexAgent(Agent):
     def __init__(self, playerNum):
         self.playerNum = playerNum
@@ -134,60 +131,6 @@ class ReflexAgent(Agent):
 
     def getDefendCard(self, cards, game):
         return self.chooseAction(cards, game)
-
-"""
-approximate QAgent
-"""
-class ApproximateQAgent(Agent):
-    def __init__(self, playerNum):
-        self.playerNum = playerNum
-
-        try:
-            with open('qagent_attack.bin', 'rb') as f_atk:
-                self.w_atk = pickle.load(f_atk)
-        except IOError:
-            print('QAgent: Initializing new attack weights')
-            self.w_atk = np.random.normal(0, 1e-2, (util.NUM_FEATURES,))
-
-        try:
-            with open('qagent_defend.bin', 'rb') as f_def:
-                self.w_def = pickle.load(f_def)
-        except IOError:
-            print('QAgent: Initializing new defense weights')
-            self.w_def = np.random.normal(0, 1e-2, (util.NUM_FEATURES,))
-
-    def setAttackWeights(self, atkWeights):
-        self.w_atk = atkWeights
-
-    def setDefendWeights(self, defWeights):
-        self.w_def = defWeights
-
-    def chooseAction(self, cards, game):
-        # choosing the asction based on the best action for qvalue
-        return self.getPolicy(cards, game)
-
-    def getQValue(self, game,card):
-        # somehow need to plug here the action
-        gameClone = copy.deepcopy(game)
-        gameClone.playCard(self.playerNum, card)
-        state = gameClone.getState(self.playerNum)
-        # TODO: need to update the state according to the action?
-        feats = util.extractFeatures(state) 
-        weights = self.w_atk if state['isAttacker'] else self.w_def
-        return np.dot(feats, weights)
-
-    def getPolicy(self, cards, game):
-        q_vals = [self.getQValue(game, action) for action in cards]
-        max_q_val = max(q_vals)
-        indices = [index for index, item in enumerate(q_vals) if item == max_q_val]
-        return cards[random.choice(indices)]
-
-    def getAttackCard(self, cards, game):
-        return self.chooseAction(cards, game)
-
-    def getDefendCard(self, cards, game):
-        return self.chooseAction(cards, game)
-    
 
 
 # minimax

@@ -1,6 +1,6 @@
 from itertools import product
 import random
-import console
+import base.console as console
 
 
 class Card:

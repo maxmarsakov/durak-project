@@ -5,7 +5,7 @@ import functools
 from heapq import merge
 import numpy as np
 
-import durak2 as dk
+from base import durak2 as dk
 
 
 class Game:

@@ -7,7 +7,7 @@ from collections import OrderedDict, Counter
 
 from rlcard.envs import Env
 from game import Game
-from durak2 import Card
+from base.durak2 import Card
 
 DEFAULT_GAME_CONFIG = {
         'game_num_players': 2,

@@ -2,21 +2,21 @@ import argparse
 import pickle
 import numpy as np
 
-import durak2 as dk
+import base.durak2 as dk
+from base.console import print_, format_suit_card, print_round_info
+import base.util as util
+
 import agent as agt
-import util
-from console import print_, format_suit_card, print_round_info
 
 from collections import namedtuple
 Reward = namedtuple('Reward', 'win_game loose_game win_round loose_round default')
-default_reward = Reward(1,0,0,0,0)
 
 gargs = None
 
 def parseArgs():
     parser = argparse.ArgumentParser(
         description='Play a two-player game of Durak against a random-policy opponent.')
-    parser.add_argument('-a', '--agent', type=str, default='random',
+    parser.add_argument('-a', '--agent', type=str, default='minimax',
                         choices=['human', 'random', 'simple', 'reflex', 'minimax','qagent'], help="Agent type")
     parser.add_argument('-o', '--opponent', type=str, default='simple',
                         choices=['human', 'random', 'simple', 'reflex', 'minimax','qagent'], help="Opponent type")
@@ -24,7 +24,7 @@ def parseArgs():
     parser.add_argument('-n', '--numGames', type=int, default=100,
                         help="Number of games to play")
     parser.add_argument('-t', '--train', action='store_true', help='Train the AI')
-    parser.add_argument('-m', '--method', type=str, choices=['TD', 'Q'], default='TD', help='Choose the training method: TD or Qlearning')
+    #parser.add_argument('-m', '--method', type=str, choices=['TD', 'Q'], default='TD', help='Choose the training method: TD or Qlearning')
     return parser.parse_args()
 
 # hyper parameters for learning
@@ -48,25 +48,7 @@ def getAgent(agentType, playerNum):
 """
 different methods for training our agents
 TDupdate - temporal difference
-Qupdate - Qlearning
 """
-def getQValue(state,action,w):
-    # TODO add action
-    features = util.extractFeatures(state)
-    return np.dot(w,features)
-
-def QUpdate(state, nextState, reward, w, eta=ETA, discount=DISCOUNT, action=None, possible_actions=None):
-    val=0.0
-    if nextState is not None:
-        #val = max([getQValue(nextState,act,w) for act in possible_actions])
-        val = getQValue(nextState,None,w)
-    q_val = getQValue(state,action,w)
-    update =  discount * val + reward - q_val
-    features = util.extractFeatures(state)
-    weights_del = features * update * eta
-    #print(val)
-    return w + weights_del
-
 
 def TDUpdate(state, nextState, reward, w, eta=ETA, discount=DISCOUNT, action=None, possible_actions=None):
     features = util.extractFeatures(state)
@@ -81,7 +63,7 @@ def TDUpdate(state, nextState, reward, w, eta=ETA, discount=DISCOUNT, action=Non
     return newWeights
 
 
-def train(args, update_func=TDUpdate, reward:Reward=default_reward):
+def train(args, update_func=TDUpdate, reward: Reward=None):
     """
     method is the function to update : tdupdate or qupdate, 
     """
@@ -283,15 +265,16 @@ def get_reward(method='TD'):
     if method=='Q':
         return Reward(100,0,1,0,0)
     elif method=='TD':
-        return default_reward
+        return Reward(1,0,0,0,0)
 
 if __name__ == '__main__':
     args = parseArgs()
     gargs = args
 
     if args.train and args.agent in ['reflex','minimax','qagent']:
-        method = QUpdate if args.method == 'Q' else TDUpdate
-        reward = get_reward(args.method)
+        method = TDUpdate
+        reward = get_reward('TD')
+        print(reward)
         train(args, method, reward)
     else:
         main(args)

@@ -18,6 +18,8 @@ share/
 *.h
 *.hpp
 
+playground/
+lib64/
 
 # non of these
 autograder.py

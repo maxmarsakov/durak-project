@@ -1,6 +1,6 @@
 import math
 from xml.dom import minicompat
-import durak2 as dk
+import base.durak2 as dk
 import numpy as np
 
 
