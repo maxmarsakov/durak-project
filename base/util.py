@@ -65,11 +65,11 @@ def getNumValidMoves(state):
     return nValidMoves
 
 
-def getAverageRanks(state):
+def getAverageRanks(hand):
     averages = []
     for suit in dk.Card.SUITS:
-        sumRanks = sum(c.rank for c in state['hand'].getCardsForSuit(suit))
-        nCards = len(state['hand'].getCardsForSuit(suit))
+        sumRanks = sum(c.rank for c in hand.getCardsForSuit(suit))
+        nCards = len(hand.getCardsForSuit(suit))
         if sumRanks == 0:
             averages.append(0)
         else:
@@ -80,10 +80,23 @@ def getAverageRanks(state):
 def extractFeatures(state):
     # nValidMoves = getNumValidMoves(state)
     # nOpponentMoves = getNumOpponentMoves(state)
-    avgRanks = getAverageRanks(state)
+    avgRanks = getAverageRanks(state['hand'])
     cardsPerRank = [len(state['hand'].getCardsForRank(rank)) for rank in dk.Card.RANKS]
     cardsPerSuit = [len(state['hand'].getCardsForSuit(suit)) for suit in dk.Card.SUITS]
+    avgRanksTrash = getAverageRanks(state['trash'])
+    cardsPerRankTrash = [len(state['trash'].getCardsForRank(rank)) for rank in dk.Card.RANKS]
+    cardsPerSuitTrash = [len(state['trash'].getCardsForSuit(suit)) for suit in dk.Card.SUITS]
     nTrumpCards = len(state['hand'].getCardsForSuit(state['trumpSuit']))
-    return np.array(avgRanks + cardsPerRank + cardsPerSuit + [nTrumpCards, 1.0])
+    nHandCards = [len(state['hand'])]
+    nOpponentsHandCards = [state['opponentHandSize']]
+    nCardsInDeck = [state['deckSize']]
+    # to check if knowing the cards of the opponent hand
+    # avgRanksOpponent = getAverageRanks(state['knownOpponentHand'])
+    # cardsPerRankOpponent = [len(state['knownOpponentHand'].getCardsForRank(rank)) for rank in dk.Card.RANKS]
+    # cardsPerSuitOpponent= [len(state['knownOpponentHand'].getCardsForSuit(suit)) for suit in dk.Card.SUITS]
+    return np.array(avgRanks + cardsPerRank + cardsPerSuit + avgRanksTrash + cardsPerRankTrash + cardsPerSuitTrash +
+                    nHandCards + [nTrumpCards, 1.0] + nOpponentsHandCards + nCardsInDeck)
+    # return np.array(avgRanks + cardsPerRank + cardsPerSuit + [nTrumpCards, 1.0])
 
-NUM_FEATURES = 4 + 9 + 4 + 2
+# NUM_FEATURES = 4 + 9 + 4 + 2
+NUM_FEATURES = 4 + 9 + 4 + 4 + 9 + 4 + 1 + 1 + 2

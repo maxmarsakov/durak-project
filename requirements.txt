@@ -1,3 +1,4 @@
 colorama
 numpy
 rlcard[torch]
+translation
