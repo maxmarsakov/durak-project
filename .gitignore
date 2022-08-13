@@ -3,6 +3,7 @@ __pycache__/
 *$py.class
 
 bin/
+lib64
 lib64/
 
 # C extensions
@@ -19,7 +20,7 @@ share/
 *.hpp
 
 playground/
-lib64/
+
 
 # non of these
 autograder.py

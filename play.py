@@ -151,6 +151,25 @@ def train(args, update_func=TDUpdate, reward: Reward=None):
             with open('%s_defend_%d.bin' % (args.agent, i), 'wb') as f_def:
                 pickle.dump(w_def, f_def)
 
+            # Evaluation stage
+            randomAgent = agt.RandomAgent()
+            simpleAgent = agt.SimpleAgent()
+            winCounts = {'random': 0, 'simple': 0}
+            numGamesSim = 100
+            for j in range(numGamesSim):
+                winVsRandom = play(dk.Durak(), [randomAgent, agents[0]])
+                winVsSimple = play(dk.Durak(), [simpleAgent, agents[0]])
+                winCounts['random'] += winVsRandom
+                winCounts['simple'] += winVsSimple
+
+            print("win counts vs random", winCounts['random']/numGamesSim)
+            print("win counts vs simple", winCounts['simple']/numGamesSim)
+            with open('results.csv', 'a') as f:
+                row = [i, winCounts['random']/numGamesSim, winCounts['simple']/numGamesSim]
+                #row.extend(w_atk)
+                #row.extend(w_def)
+                np.savetxt(f, np.array(row)[:, None].T, delimiter=',', fmt='%.4e')    
+
         g.newGame()
 
     with open('%s_attack.bin' % args.agent, 'wb') as f_atk:
@@ -158,24 +177,7 @@ def train(args, update_func=TDUpdate, reward: Reward=None):
     with open('%s_defend.bin' % args.agent, 'wb') as f_def:
         pickle.dump(w_def, f_def)
 
-    # Evaluation stage
-    randomAgent = agt.RandomAgent()
-    simpleAgent = agt.SimpleAgent()
-    winCounts = {'random': 0, 'simple': 0}
-    numGamesSim = 100
-    for j in range(numGamesSim):
-        winVsRandom = play(dk.Durak(), [randomAgent, agents[0]])
-        winVsSimple = play(dk.Durak(), [simpleAgent, agents[0]])
-        winCounts['random'] += winVsRandom
-        winCounts['simple'] += winVsSimple
-
-    print("win counts vs random", winCounts['random']/numGamesSim)
-    print("win counts vs simple", winCounts['simple']/numGamesSim)
-    with open('results.csv', 'a') as f:
-        row = [i, winCounts['random'], winCounts['simple']]
-        row.extend(w_atk)
-        row.extend(w_def)
-        np.savetxt(f, np.array(row)[:, None].T, delimiter=',', fmt='%.4e')
+    
 
     return w_atk, w_def
 

@@ -99,4 +99,4 @@ def extractFeatures(state):
     # return np.array(avgRanks + cardsPerRank + cardsPerSuit + [nTrumpCards, 1.0])
 
 # NUM_FEATURES = 4 + 9 + 4 + 2
-NUM_FEATURES = 4 + 9 + 4 + 4 + 9 + 4 + 1 + 1 + 2
+NUM_FEATURES = 4 + 9 + 4 + 4 + 9 + 4 + 1 + 1 + 2 + 1
