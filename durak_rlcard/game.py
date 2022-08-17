@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
-''' Implement Durak Game class
+''' 
+Implement Durak Game class
 '''
 import functools
 from heapq import merge
 import numpy as np
+
+import os
+import sys
+if "PROJECT_PATH" in os.environ:
+    # if not supporting virtualenv
+    sys.path.insert(0,os.environ['PROJECT_PATH'])
 
 from base import durak2 as dk
 

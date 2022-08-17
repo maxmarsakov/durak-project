@@ -102,6 +102,7 @@ instance/
 
 # Scrapy stuff:
 .scrapy
+experiments/
 
 # Sphinx documentation
 docs/_build/

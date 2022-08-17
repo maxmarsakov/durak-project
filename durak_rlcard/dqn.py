@@ -2,6 +2,7 @@ import os
 import argparse
 
 import torch
+import time
 
 import rlcard
 from rlcard.agents import RandomAgent
@@ -14,6 +15,7 @@ from rlcard.utils import (
     plot_curve,
 )
 from env import DurakEnv
+
 
 def train(args):
 
@@ -50,6 +52,7 @@ def train(args):
     env.set_agents(agents)
 
     # Start training
+    curr_time=None
     with Logger(args.log_dir) as logger:
         for episode in range(args.num_episodes):
 
@@ -77,6 +80,14 @@ def train(args):
                         args.num_eval_games,
                     )[0]
                 )
+            
+            if curr_time is None or ( (time.perf_counter()-curr_time) > 60 * args.save_every):
+                # as well save the model
+                print()
+                print("saving model")
+                save_path = os.path.join(args.log_dir, 'model.pth')
+                torch.save(agent, save_path)
+                curr_time=time.perf_counter()
 
         # Get the paths
         csv_path, fig_path = logger.csv_path, logger.fig_path
@@ -125,6 +136,12 @@ if __name__ == '__main__':
         '--evaluate_every',
         type=int,
         default=100,
+    )
+
+    parser.add_argument(
+        '--save_every',
+        type=int,
+        default=30,
     )
     parser.add_argument(
         '--log_dir',

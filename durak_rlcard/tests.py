@@ -1,7 +1,7 @@
 import rlcard
 from rlcard.agents import RandomAgent
 from env import DurakEnv
-from human_agent import HumanAgent
+from agents.human_agent import HumanAgent
 
 def basic_human_test():
     env = DurakEnv()
@@ -54,7 +54,7 @@ def basic_blackjack():
     print(payoffs)
 
 if __name__ == "__main__":
-    basic_random_test()
-    #basic_human_test()
+    #basic_random_test()
+    basic_human_test()
     #basic_blackjack()
 

@@ -9,6 +9,12 @@ from rlcard.envs import Env
 from game import Game
 from base.durak2 import Card
 
+import os
+import sys
+if "PROJECT_PATH" in os.environ:
+    # if not supporting virtualenv
+    sys.path.insert(0,os.environ['PROJECT_PATH'])
+
 DEFAULT_GAME_CONFIG = {
         'game_num_players': 2,
         'game_num_decks': 1,
@@ -29,7 +35,7 @@ class DurakEnv(Env):
         self.game = Game()
         super().__init__(config)
         # TODO recalc state shape
-        self.state_shape = [[229], [901], [901]]
+        self.state_shape = [[229], [229]]
 
         # add special action
         self.action_shape = [[TOTAL_CARDS+1] for _ in range(self.num_players)]
@@ -41,7 +47,7 @@ class DurakEnv(Env):
         '''
         legal_actions = self.game.state['actions']
         
-        legal_actions = dict([ (self._compute_action_id(action),action) for action in legal_actions])
+        legal_actions = dict([ (self._compute_action_id(action), _one_hot(action)  ) for action in legal_actions])
         #print(legal_actions)
         return legal_actions
     

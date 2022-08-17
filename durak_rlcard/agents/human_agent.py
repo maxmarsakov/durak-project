@@ -24,7 +24,11 @@ class HumanAgent(object):
         Returns:
             action (int): The action decided by human
         '''
+
+        #print(state['legal_actions'])
         _print_state(state['raw_obs'], state['raw_legal_actions'], state['action_record'])
+
+        
 
         role = 'attacker' if state['raw_obs']['isAttacker'] else 'defender'
         current_player = state['raw_obs']['current_player']
@@ -86,6 +90,7 @@ def _print_state(state, raw_legal_actions, action_record):
     #for pair in _action_list:
     #    print('>> Player', pair[0], 'chooses', pair[1])
     
+
     print("deck size", state['deckSize'])
     print("opponentHandSize", state['opponentHandSize'])
     print("current trump is", _format_suit_card(Card.SUITS[state['trumpSuit']]))
