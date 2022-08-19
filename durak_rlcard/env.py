@@ -141,7 +141,7 @@ NumOnes2Array = {0: np.array([0, 0, 0, 0]),
                  3: np.array([1, 1, 1, 0]),
                  4: np.array([1, 1, 1, 1])}
 
-@lru_cache
+@lru_cache(maxsize=128)
 def compute_action_id(action):
         if action.suit==-1:
             return 36
@@ -149,7 +149,7 @@ def compute_action_id(action):
         #print(action, action_id)
         return action_id
 
-@lru_cache
+@lru_cache(maxsize=128)
 def decode_action(action_id):
     ''' Action id -> the action in the game. Must be implemented in the child class.
     Args:
@@ -164,7 +164,7 @@ def decode_action(action_id):
     card = Card(suit,rank)
     return card
 
-@lru_cache
+@lru_cache(maxsize=128)
 def _one_hot(card):
     # gets one card, returns one hot
     base = np.zeros((4,9), dtype=np.int8)
@@ -175,7 +175,7 @@ def _one_hot(card):
     base[card.suit][card.rank-6] = 1
     return np.concatenate([base.flatten('F'),has_special])
 
-@lru_cache
+@lru_cache(maxsize=128)
 def _cards2array(cards):
     base = np.zeros((4,9), dtype=np.int8)
     has_special=[0]
