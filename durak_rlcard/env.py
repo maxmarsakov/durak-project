@@ -1,6 +1,7 @@
 """
 durak env for rlcard env
 """
+from base64 import decode
 from matplotlib.pyplot import table
 import numpy as np
 from collections import OrderedDict, Counter
@@ -8,6 +9,8 @@ from collections import OrderedDict, Counter
 from rlcard.envs import Env
 from game import Game
 from base.durak2 import Card
+
+from functools import lru_cache
 
 import os
 import sys
@@ -47,16 +50,18 @@ class DurakEnv(Env):
         '''
         legal_actions = self.game.state['actions']
         
-        legal_actions = dict([ (self._compute_action_id(action), _one_hot(action)  ) for action in legal_actions])
+        legal_actions = dict([ (compute_action_id(action), _one_hot(action)  ) for action in legal_actions])
         #print(legal_actions)
         return legal_actions
-    
-    def _compute_action_id(self, action):
-        if action.suit==-1:
-            return 36
-        action_id = action.suit*9+action.rank-6
-        #print(action, action_id)
-        return action_id
+
+    def _decode_action(self,action_id):
+        ''' Action id -> the action in the game. Must be implemented in the child class.
+        Args:
+            action_id (int): the id of the action
+        Returns:
+            action (string): the action that will be passed to the game engine.
+        '''
+        return decode_action(action_id)
     
 
     def _extract_state(self, state):
@@ -106,21 +111,6 @@ class DurakEnv(Env):
         return tuple(payoffs)
         
 
-    def _decode_action(self, action_id):
-        ''' Action id -> the action in the game. Must be implemented in the child class.
-        Args:
-            action_id (int): the id of the action
-        Returns:
-            action (string): the action that will be passed to the game engine.
-        '''
-        if (action_id==36):
-            return Card(-1,-1)
-        suit=action_id//9
-        rank=action_id%9+6
-        card = Card(suit,rank)
-        return card
-
-
     def get_perfect_information(self):
         ''' Get the perfect information of the current state
         Returns:
@@ -140,7 +130,7 @@ class DurakEnv(Env):
         Returns:
             (numpy.array): The action features
         '''
-        return _one_hot(self._decode_action(action))
+        return _one_hot( decode_action(action) )
 
 Card2Column = {'3': 0, '4': 1, '5': 2, '6': 3, '7': 4, '8': 5, '9': 6, 'T': 7,
                'J': 8, 'Q': 9, 'K': 10, 'A': 11, '2': 12}
@@ -151,6 +141,30 @@ NumOnes2Array = {0: np.array([0, 0, 0, 0]),
                  3: np.array([1, 1, 1, 0]),
                  4: np.array([1, 1, 1, 1])}
 
+@lru_cache
+def compute_action_id(action):
+        if action.suit==-1:
+            return 36
+        action_id = action.suit*9+action.rank-6
+        #print(action, action_id)
+        return action_id
+
+@lru_cache
+def decode_action(action_id):
+    ''' Action id -> the action in the game. Must be implemented in the child class.
+    Args:
+        action_id (int): the id of the action
+    Returns:
+        action (string): the action that will be passed to the game engine.
+    '''
+    if (action_id==36):
+        return Card(-1,-1)
+    suit=action_id//9
+    rank=action_id%9+6
+    card = Card(suit,rank)
+    return card
+
+@lru_cache
 def _one_hot(card):
     # gets one card, returns one hot
     base = np.zeros((4,9), dtype=np.int8)
@@ -161,6 +175,7 @@ def _one_hot(card):
     base[card.suit][card.rank-6] = 1
     return np.concatenate([base.flatten('F'),has_special])
 
+@lru_cache
 def _cards2array(cards):
     base = np.zeros((4,9), dtype=np.int8)
     has_special=[0]

@@ -28,8 +28,6 @@ class HumanAgent(object):
         #print(state['legal_actions'])
         _print_state(state['raw_obs'], state['raw_legal_actions'], state['action_record'])
 
-        
-
         role = 'attacker' if state['raw_obs']['isAttacker'] else 'defender'
         current_player = state['raw_obs']['current_player']
         action = int(input(f'>> Player {current_player},{role}. You choose action (integer): '))
@@ -67,7 +65,7 @@ def __format_table( table):
 SUIT_ICONS = {
     "-1": 'Stop', "C":'♣', "H":'♥' ,"D":'♦' ,"S":'♠'
 }
-def _format_suit_card(suitString, text=""):
+def format_suit_card(suitString, text=""):
     formattedSuit = SUIT_ICONS[suitString]
 
     if(suitString in ['H','D']): 
@@ -75,6 +73,9 @@ def _format_suit_card(suitString, text=""):
     else: 
         color = '\033[30m'
     return f'\033[47m {color}{formattedSuit}\033[00m\033[47m\033[30m {text} \033[00m' 
+
+def suit_to_string(ind):
+    return Card.SUITS[ind]
 
 
 def _print_state(state, raw_legal_actions, action_record):
@@ -93,7 +94,7 @@ def _print_state(state, raw_legal_actions, action_record):
 
     print("deck size", state['deckSize'])
     print("opponentHandSize", state['opponentHandSize'])
-    print("current trump is", _format_suit_card(Card.SUITS[state['trumpSuit']]))
+    print("current trump is", format_suit_card( suit_to_string(state['trumpSuit']) ) )
     print(__format_table(state['table']))
     print("your hand", state['hand'])
     print("legal actions", raw_legal_actions)
