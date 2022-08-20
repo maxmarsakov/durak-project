@@ -100,28 +100,13 @@ def basic_simple_proba_tournament():
 
     # simple callback is needed to determine 
     # when to use simple vs dqn strategy
-    def callback(state):
-        raw=state['raw_obs']
-        deckSize=raw['deckSize']
-
-        # set these hyperparameters
-        endCardsSize=10
-        probaStart=0.2
-        probaEnd=0.8
-
-        if deckSize<=endCardsSize: 
-            # endgame
-            return 'dqn' if random.random() < probaEnd else 'simple'
-        # start game
-        return 'dqn' if random.random() < probaStart else 'simple'
-    
-
     learning_agent=SimpleProbaAgent(
         num_actions=env.num_actions,
         state_shape=env.state_shape[0],
         mlp_layers=[64,64],
         device=device,
-        use_strategy_callback=callback
+        proba_at_start=0.1,
+        proba_at_end=0.9,
     )
 
     env.set_agents([learning_agent,RandomAgent(num_actions=env.num_actions)])

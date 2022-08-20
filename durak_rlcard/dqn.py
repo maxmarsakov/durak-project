@@ -22,7 +22,7 @@ from collections import namedtuple
 
 CustomArgs=namedtuple('CustomArgs',['agent','opponent','cuda','seed','num_episodes','num_eval_games','evaluate_every','save_every','log_dir'])
 
-def train(args,env,agent):
+def train(args,env,agent,evaluate_vs=None):
 
     # Start training
     curr_time=None
@@ -50,6 +50,9 @@ def train(args,env,agent):
 
             # Evaluate the performance. Play with random agents.
             if episode % args.evaluate_every == 0:
+                prev_agents=env.agents
+                if evaluate_vs is not None:
+                    env.set_agents([agent,evaluate_vs])
                 logger.log_performance(
                     env.timestep,
                     tournament(
@@ -57,11 +60,11 @@ def train(args,env,agent):
                         args.num_eval_games,
                     )[0]
                 )
+                if evaluate_vs is not None:
+                    env.set_agents(prev_agents)
             
             if curr_time is None or ( (time.perf_counter()-curr_time) > 60 * args.save_every):
                 # as well save the model
-                print()
-                print("saving model")
                 save_path = os.path.join(args.log_dir, 'model.pth')
                 torch.save(agent, save_path)
                 curr_time=time.perf_counter()
@@ -70,7 +73,7 @@ def train(args,env,agent):
         csv_path, fig_path = logger.csv_path, logger.fig_path
 
     # Plot the learning curve
-    plot_curve(csv_path, fig_path, args.algorithm)
+    plot_curve(csv_path, fig_path, args.agent)
 
     # Save model
     save_path = os.path.join(args.log_dir, 'model.pth')
@@ -88,7 +91,8 @@ def parse_args_terminal():
             'dqn',
             'nfsp',
             'simple_learning',
-            'simple_proba'
+            'simple_proba',
+            'simple_inverted'
         ],
     )
     
@@ -171,29 +175,23 @@ def get_agent_opponent(env,args):
             mlp_layers=[64,64],
             device=device,
         )
+    elif args.agent == 'simple_inverted':
+        from agents import SimpleInvertedAgent
+        agent = SimpleInvertedAgent(
+            num_actions=env.num_actions,
+            state_shape=env.state_shape[0],
+            mlp_layers=[64,64],
+            device=device,
+        )
     elif args.agent == 'simple_proba':
-        # simple callback is needed to determine 
-        # when to use simple vs dqn strategy
-        def pcallback(state):
-            raw=state['raw_obs']
-            deckSize=raw['deckSize']
-            # set these hyperparameters
-            endCardsSize=10
-            probaStart=0.2
-            probaEnd=0.8
-            if deckSize<=endCardsSize: 
-                # endgame
-                return 'dqn' if random.random() < probaEnd else 'simple'
-            # start game
-            return 'dqn' if random.random() < probaStart else 'simple'
-
         from agents import SimpleProbaAgent
         agent = SimpleProbaAgent(
             num_actions=env.num_actions,
             state_shape=env.state_shape[0],
             mlp_layers=[64,64],
             device=device,
-            use_strategy_callback=pcallback
+            proba_at_start=0.1,
+            proba_at_end=0.9,
         )
     
     # set opponent
@@ -219,7 +217,7 @@ if __name__ == '__main__':
     env = DurakEnv()
 
     agent,opponent=get_agent_opponent(env,args)    
-    
+
     # Initialize the agents
     env.set_agents([agent,opponent])
     os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda

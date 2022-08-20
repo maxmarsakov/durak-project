@@ -2,14 +2,11 @@ import numpy as np
 from agents.simple_agent import SimpleAgent
 from rlcard.agents import DQNAgent
 
-TOTAL_CARDS=36
-NUM_CARDS_AT_START=24
-import random
 
-class SimpleProbaAgent(DQNAgent):
+class SimpleInvertedAgent(DQNAgent):
     ''' 
     SimpleLearningAgent is the agent that chooses uses simple agent strategy
-    and mixes it with DQNAgent, according to coin flipper callback function
+    and mixes it with DQNAgent, at the very end of the game
     '''
 
     def __init__(self,
@@ -26,38 +23,15 @@ class SimpleProbaAgent(DQNAgent):
         train_every=1,
         mlp_layers=None,
         learning_rate=0.00005,
-        device=None,
-        # proba parameters, linear probability transition
-        proba_at_start=0.1, # the probability to use dqn at start
-        proba_at_end=0.9 # the probabilty top use dqn at end
-       
-        ):
+        device=None):
         ''' Initilize the random agent
         Args:
             num_actions (int): The size of the ouput action space
         '''
         super().__init__(replay_memory_size, replay_memory_init_size,  update_target_estimator_every, discount_factor, epsilon_start,\
               epsilon_end,  epsilon_decay_steps,  batch_size, num_actions, state_shape, train_every, mlp_layers,  learning_rate, device)
-    
-        self.proba_at_start=proba_at_start
-        self.proba_at_end=proba_at_end
-
-    def use_strategy(self,state):
-        """
-        given state, and other parameters this function 
-        determines when to use dqna vs simple
-        it uses linear approximation to transition between dqn and simple strate
-        """ 
-        #(TOTAL_CARDS-(TOTAL_CARDS-NUM_CARDS_AT_START)  = NUM_CARDS_AT_START
-        slope=(self.proba_at_end-self.proba_at_start)/NUM_CARDS_AT_START
-        intercept=self.proba_at_end-slope*TOTAL_CARDS
-        cards_left=state['raw_obs']['deckSize']
-        proba_use_dqn=slope*(TOTAL_CARDS-cards_left)+intercept
-        coin = random.random()
-
-        if coin < proba_use_dqn:
-            return "dqn"
-        return "simple"
+        #self.use_raw = False
+        #self.num_actions = num_actions
 
     def step(self,state):
         ''' Predict the action given the curent state in gerenerating training data.
@@ -66,12 +40,15 @@ class SimpleProbaAgent(DQNAgent):
         Returns:
             action (int): The action predicted (randomly chosen) by the random agent
         '''
-        if self.use_strategy(state)=='dqn':
-            # dqna
+        raw=state['raw_obs']
+        deckSize=raw['deckSize']
+        #print(deckSize)
+        if deckSize>0:
+            #simple
             return super().step(state)
-        #simple
+        # dqna
         return SimpleAgent.simple_strategy_step(state)
-
+        
 
     def eval_step(self, state):
         ''' Predict the action given the current state for evaluation.
@@ -82,8 +59,12 @@ class SimpleProbaAgent(DQNAgent):
             action (int): The action predicted (randomly chosen) by the random agent
             probs (list): The list of action probabilities
         '''
-        if self.use_strategy(state)=='dqn':
-            # dqna
+        raw=state['raw_obs']
+        deckSize=raw['deckSize']
+        if deckSize>0:
+            #dqna
             return super().eval_step(state)
-        #simple
+
         return SimpleAgent.simple_strategy_step(state), {}
+        
+        
