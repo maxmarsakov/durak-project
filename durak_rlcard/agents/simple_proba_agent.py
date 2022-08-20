@@ -29,8 +29,8 @@ class SimpleProbaAgent(DQNAgent):
         device=None,
         # proba parameters, linear probability transition
         proba_at_start=0.1, # the probability to use dqn at start
-        proba_at_end=0.9 # the probabilty top use dqn at end
-       
+        proba_at_end=0.9, # the probabilty top use dqn at end
+        threshold=None # if threshold is set, the probabilities are adjusted according to decksize
         ):
         ''' Initilize the random agent
         Args:
@@ -41,6 +41,7 @@ class SimpleProbaAgent(DQNAgent):
     
         self.proba_at_start=proba_at_start
         self.proba_at_end=proba_at_end
+        self.threshold=threshold
 
     def use_strategy(self,state):
         """
@@ -48,12 +49,18 @@ class SimpleProbaAgent(DQNAgent):
         determines when to use dqna vs simple
         it uses linear approximation to transition between dqn and simple strate
         """ 
+        cards_left=state['raw_obs']['deckSize']
+        coin = random.random()
+        if self.threshold is not None:
+            if cards_left >= self.threshold:
+                # start game
+                return 'dqn' if coin < self.proba_at_start else 'simple'
+            return 'dqn' if coin < self.proba_at_end else 'simple'
+
         #(TOTAL_CARDS-(TOTAL_CARDS-NUM_CARDS_AT_START)  = NUM_CARDS_AT_START
         slope=(self.proba_at_end-self.proba_at_start)/NUM_CARDS_AT_START
         intercept=self.proba_at_end-slope*TOTAL_CARDS
-        cards_left=state['raw_obs']['deckSize']
         proba_use_dqn=slope*(TOTAL_CARDS-cards_left)+intercept
-        coin = random.random()
 
         if coin < proba_use_dqn:
             return "dqn"

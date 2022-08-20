@@ -112,11 +112,32 @@ def basic_simple_proba_tournament():
     env.set_agents([learning_agent,RandomAgent(num_actions=env.num_actions)])
     print( tournament(env,1000) )
 
+def basic_simple_proba_threshold_tournament():
+    # basic simple tournament vs random
+    env = DurakEnv()
+    device=get_device()
+
+    # simple callback is needed to determine 
+    # when to use simple vs dqn strategy
+    learning_agent=SimpleProbaAgent(
+        num_actions=env.num_actions,
+        state_shape=env.state_shape[0],
+        mlp_layers=[64,64],
+        device=device,
+        proba_at_start=0.1,
+        proba_at_end=0.9,
+        threshold=5
+    )
+
+    env.set_agents([learning_agent,RandomAgent(num_actions=env.num_actions)])
+    print( tournament(env,1000) )
+
 if __name__ == "__main__":
     set_seed(0)
     #basic_simple_tournament()
     #basic_simple_learning_tournament()
-    basic_simple_proba_tournament()
+    #basic_simple_proba_tournament()
+    basic_simple_proba_threshold_tournament()
     #basic_human_test()
     #basic_blackjack()
 
