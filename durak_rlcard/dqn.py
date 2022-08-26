@@ -1,3 +1,7 @@
+"""
+main traning file for DQN agents
+"""
+
 from optparse import OptionParser
 import os
 import argparse
