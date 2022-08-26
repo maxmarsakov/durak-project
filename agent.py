@@ -1,3 +1,7 @@
+"""
+agents for TD learning (method 1)
+"""
+
 import random
 import copy
 import pickle

@@ -37,11 +37,6 @@ class SimpleAgent(object):
         legal_decoded_actions=[(k,decode_action(k)) for k in dict(state['legal_actions']) ]
         non_trump_cards=[(k,a) for k,a in legal_decoded_actions if a.suit not in (trumpSuit,STOP_SUIT)]
 
-        #print(state['legal_actions'])
-        #print(legal_decoded_actions)
-        #print("trump", format_suit_card(suit_to_string(trumpSuit)))
-        #print("legal",legal_decoded_actions)
-        #print("non trump", non_trump_cards)
         if len(non_trump_cards)>0:
             m=min(non_trump_cards, key=lambda x: x[1])
             return m[0]

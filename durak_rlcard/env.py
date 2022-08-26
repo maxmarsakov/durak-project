@@ -191,26 +191,3 @@ def _one_hot_index(index,max_vals):
     one_hot = np.zeros(max_vals,int)
     one_hot[index]=1
     return one_hot
-
-"""
-def _get_one_hot_array(num_left_cards, max_num_cards):
-    one_hot = np.zeros(max_num_cards, dtype=np.int8)
-    one_hot[num_left_cards - 1] = 1
-
-    return one_hot
-
-def _action_seq2array(action_seq_list):
-    action_seq_array = np.zeros((len(action_seq_list), 52), np.int8)
-    for row, cards in enumerate(action_seq_list):
-        action_seq_array[row, :] = _cards2array(cards)
-    action_seq_array = action_seq_array.flatten()
-    return action_seq_array
-
-def _process_action_seq(sequence, length=9):
-    sequence = [action[1] for action in sequence[-length:]]
-    if len(sequence) < length:
-        empty_sequence = ['' for _ in range(length - len(sequence))]
-        empty_sequence.extend(sequence)
-        sequence = empty_sequence
-    return sequence
-"""

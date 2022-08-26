@@ -21,7 +21,7 @@ def parseArgs():
     parser.add_argument('-o', '--opponent', type=str, default='simple',
                         choices=['human', 'random', 'simple', 'reflex', 'minimax','qagent'], help="Opponent type")
     parser.add_argument('-v', '--verbose', action='store_true', help='verbosity')
-    parser.add_argument('-n', '--numGames', type=int, default=100,
+    parser.add_argument('-n', '--numGames', type=int, default=1,
                         help="Number of games to play")
     parser.add_argument('-t', '--train', action='store_true', help='Train the AI')
     #parser.add_argument('-m', '--method', type=str, choices=['TD', 'Q'], default='TD', help='Choose the training method: TD or Qlearning')

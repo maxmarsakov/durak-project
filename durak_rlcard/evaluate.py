@@ -1,13 +1,11 @@
-''' An example of evluating the trained models in RLCard
+'''
+evaluate different models
 '''
 import os
 import argparse
 
 import rlcard
-from rlcard.agents import (
-    DQNAgent,
-    RandomAgent,
-)
+
 from rlcard.utils import (
     get_device,
     set_seed,
@@ -28,6 +26,9 @@ def load_model(model_path, env=None, position=None, device=None):
     elif model_path == 'random':  # Random model
         from rlcard.agents import RandomAgent
         agent = RandomAgent(num_actions=env.num_actions)
+    elif model_path == 'simple':  # Random model
+        from agents import SimpleAgent
+        agent = SimpleAgent(num_actions=env.num_actions)
     else:  # A model in the model zoo
         from rlcard import models
         agent = models.load(model_path).agents[position]
@@ -58,26 +59,11 @@ def evaluate(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Evaluation example in RLCard")
-    parser.add_argument(
-        '--env',
-        type=str,
-        default='leduc-holdem',
-        choices=[
-            'blackjack',
-            'leduc-holdem',
-            'limit-holdem',
-            'doudizhu',
-            'mahjong',
-            'no-limit-holdem',
-            'uno',
-            'gin-rummy',
-        ],
-    )
+   
     parser.add_argument(
         '--models',
         nargs='*',
         default=[
-            'experiments/leduc_holdem_dqn_result/model.pth',
             'random',
         ],
     )
@@ -94,7 +80,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--num_games',
         type=int,
-        default=10000,
+        default=2000,
     )
 
     args = parser.parse_args()
