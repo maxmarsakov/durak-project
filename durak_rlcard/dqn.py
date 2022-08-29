@@ -1,6 +1,10 @@
+
+
 """
 main traning file for DQN agents
 """
+import sys
+sys.path.insert(0,'.')
 
 from optparse import OptionParser
 import os

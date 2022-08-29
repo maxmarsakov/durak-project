@@ -5,6 +5,10 @@ import os
 import argparse
 from turtle import numinput
 
+import sys
+# yes its a little bit hacky but it works
+sys.path.insert(0,'.')
+
 import rlcard
 from agents import HumanAgent
 

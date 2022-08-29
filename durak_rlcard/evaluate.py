@@ -1,10 +1,14 @@
 '''
 evaluate different models
 '''
+
 import os
 import argparse
 
 import rlcard
+# yes its a little bit hacky but it works
+import sys
+sys.path.insert(0,'.')
 
 from rlcard.utils import (
     get_device,

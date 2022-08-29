@@ -1,9 +1,14 @@
+# yes its a little bit hacky but it works
+import sys
+sys.path.insert(0,'.')
+
 import rlcard
 from rlcard.agents import RandomAgent
 from env import DurakEnv
 from agents import HumanAgent
 from agents import SimpleAgent, SimpleLearningAgent, SimpleProbaAgent
 import random
+
 
 from rlcard.utils import (
     get_device,

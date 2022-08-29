@@ -1,5 +1,8 @@
 ''' Training a Deep Monte-Carlo (DMC) Agent on the environments in RLCard
 '''
+import sys
+sys.path.insert(0,'.')
+
 import os
 import argparse
 
